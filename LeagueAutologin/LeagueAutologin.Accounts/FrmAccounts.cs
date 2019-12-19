@@ -143,8 +143,6 @@ namespace LeagueAutologin.Accounts
             tmr.Start();
         }
 
-        // NOTE: Get pass:  Encoding.UTF8.GetString(AES.Decrypt(acc.Password, acc.Salt, GetPasskey(acc.Username)))
-
         /// <summary>
         /// Gets the computer's MAC address.
         /// </summary>

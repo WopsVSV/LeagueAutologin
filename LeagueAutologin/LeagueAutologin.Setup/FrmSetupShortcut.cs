@@ -110,7 +110,8 @@ namespace LeagueAutologin.Setup
                 IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(shortcutAddress);
                 shortcut.Description = "League of Legends with an Autologin widget.";
                 shortcut.IconLocation = txtLeagueClientLocation.Text + ",0";
-                shortcut.TargetPath = extensionAppPath;
+                shortcut.TargetPath = "\"" + extensionAppPath + "\"";
+                shortcut.WorkingDirectory = Application.StartupPath;
                 shortcut.Save();
             }
             catch (Exception ex)
