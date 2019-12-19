@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace LeagueAutologin.Setup
+namespace LeagueAutologin.Accounts
 {
     static class Program
     {
@@ -15,7 +15,7 @@ namespace LeagueAutologin.Setup
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new FrmSetupShortcut());
+            Application.Run(new FrmAccounts());
         }
     }
 }
