@@ -28,6 +28,13 @@ namespace LeagueAutologin.Extension
                 pData.ButtonY + window.Y,
                 pData.LogoX, pData.LogoY);
 
+            // Avoiding a problem: { and } are special characters for SendKeys. We have to escape them.
+            password = password.Replace("{", "^^{^^");
+            password = password.Replace("}", "^^}^^");
+            password = password.Replace("^^{^^", "{{}");
+            password = password.Replace("^^}^^", "{}}");
+            // Easy, but inefficient method. In the grand scheme of things, this doesn't make any difference.
+
 
             // Input username
             SetCursorPos(pData.UsernameX, pData.UsernameY);
@@ -51,6 +58,7 @@ namespace LeagueAutologin.Extension
             mouse_event(MOUSEEVENTF_LEFTUP, pData.PasswordX, pData.PasswordY, 0, 0);
             SendKeys.Send("{BACKSPACE}");
             System.Threading.Thread.Sleep(10);
+
             SendKeys.Send(password);
 
             System.Threading.Thread.Sleep(5);

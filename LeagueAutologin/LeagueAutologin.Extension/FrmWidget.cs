@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
@@ -15,11 +16,6 @@ namespace LeagueAutologin.Extension
         private XmlConfiguration xml;
         private Process proc;
         private PositionData[] positionData;
-
-        // Logos for multiple client sizes
-        private Bitmap logoBmp1280;
-        private Bitmap logoBmp1024;
-        private Bitmap logoBmp1600;
 
         public FrmWidget()
         {
@@ -40,20 +36,6 @@ namespace LeagueAutologin.Extension
             else
             {
                 xml = new XmlConfiguration("accounts.xml");
-            }
-
-            // Setup bitmaps
-            try
-            {
-                logoBmp1280 = new Bitmap("logo1280.bmp");
-                logoBmp1024 = new Bitmap("logo1024.bmp");
-                logoBmp1600 = new Bitmap("logo1600.bmp");
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show("Error while loading logos. Make sure Extension.exe is in the same folder as the 3 logo images.\n" + ex.Message);
-                Application.Exit();
-                return;
             }
 
             // Load accounts
@@ -151,40 +133,15 @@ namespace LeagueAutologin.Extension
         {
             Rectangle rect = FormHelper.GetWindowRectangle(this, proc.MainWindowHandle);
 
-            // Check window size before (only 3 supported)
-            Bitmap logo = logoBmp1280;
-            PositionData posData = positionData[0];
-            if (rect.Width == 1280) { logo = logoBmp1280; posData = positionData[0]; }
-            if (rect.Width == 1024) { logo = logoBmp1024; posData = positionData[1]; }
-            if (rect.Width == 1600) { logo = logoBmp1600; posData = positionData[2]; }
-
-            // Screen capture bounds (start at client position + offset and end depending on logo size)
-            Rectangle bounds = new Rectangle(rect.X + posData.LogoX, rect.Y + posData.LogoY, logo.Width, logo.Height);
-
-            // Capture
-            Bitmap screenBmp = new Bitmap(logo.Width, logo.Height);
-            using (Graphics g = Graphics.FromImage(screenBmp)) {
-                g.CopyFromScreen(new Point(bounds.Left, bounds.Top), Point.Empty, bounds.Size);
-            }
-
-            // Check if logo & screen capture match
-            bool equals = FormHelper.CompareMemCmp(screenBmp, logo);
-
-            // If its a match, display the widget and stop the timer.
-            if(equals == true) {
-                DisplayForm();
+            if(rect.Width == 1280 || rect.Width == 1024 || rect.Width == 1600)
+            {
+                System.Threading.Thread.Sleep(800);
+                Relocate();
+                this.Opacity = 1.0;
+                this.Enabled = true;
+                tmrRelocateForm.Start();
                 tmrCheckScreen.Stop();
-            }
-
-            screenBmp.Dispose();
-        }
-
-        private void DisplayForm()
-        {
-            Relocate();
-            this.Opacity = 1.0;
-            this.Enabled = true;
-            tmrRelocateForm.Start();
+            }      
         }
 
         bool isStarted = false;
@@ -306,5 +263,10 @@ namespace LeagueAutologin.Extension
         {
             LoadAccounts();
         }
+        [DllImport("User32.dll")]
+        public static extern IntPtr GetDC(IntPtr hwnd);
+        [DllImport("User32.dll")]
+        public static extern void ReleaseDC(IntPtr hwnd, IntPtr dc);
+   
     }
 }
