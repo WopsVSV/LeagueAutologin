@@ -5,6 +5,9 @@ using System.Text;
 
 namespace LeagueAutologin.Extension
 {
+    /// <summary>
+    /// Used to hold position data for different sizes of league clients.
+    /// </summary>
     public class PositionData
     {
         public int Width { get; set; }

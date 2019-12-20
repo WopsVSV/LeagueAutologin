@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
-namespace LeagueAutologin.Extension
+namespace LeagueAutologin.Library
 {
     /// <summary>
     /// Specialised class for handling XML configuration for accounts.
@@ -42,14 +42,8 @@ namespace LeagueAutologin.Extension
         }
 
         /// <summary>
-        /// Adds an element to the configuration, if it doesn't already exist
+        /// Adds an account to the XML document.
         /// </summary>
-        public void Add(string key, string value)
-        {
-            if (document.Root.Element(key) == null)
-                document.Root.Add(new XElement(key, value));
-        }
-
         public void AddAccount(Account account)
         {
             XElement element = new XElement("account");
@@ -62,6 +56,9 @@ namespace LeagueAutologin.Extension
             document.Root.Add(element);
         }
 
+        /// <summary>
+        /// Removes an account from the XML document.
+        /// </summary>
         public bool RemoveAccount(Account account)
         {
             try
@@ -81,6 +78,9 @@ namespace LeagueAutologin.Extension
             return true;
         }
 
+        /// <summary>
+        /// Reads and returns a list of all accounts included in the XML.
+        /// </summary>
         public List<Account> ReadAccounts()
         {
             List<Account> accounts = new List<Account>();

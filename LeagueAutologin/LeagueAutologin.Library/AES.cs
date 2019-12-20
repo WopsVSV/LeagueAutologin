@@ -5,10 +5,13 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace LeagueAutologin.Extension
+namespace LeagueAutologin.Library
 {
     public class AES
     {
+        /// <summary>
+        /// Generates a random 64bit salt.
+        /// </summary>
         public static byte[] GenerateSalt()
         {
             byte[] salt = new byte[8];

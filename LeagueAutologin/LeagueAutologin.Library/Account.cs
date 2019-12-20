@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LeagueAutologin.Extension
+namespace LeagueAutologin.Library
 {
     public class Account
     {
@@ -13,13 +13,13 @@ namespace LeagueAutologin.Extension
         public string Nickname { get; private set; }
         public string Region { get; private set; }
 
-        public Account(string username, byte[] password, byte[] iv, string nickname, string region)
+        public Account(string username, byte[] password, byte[] salt, string nickname, string region)
         {
             Username = username;
             Password = password;
             Nickname = nickname;
             Region = region;
-            Salt = iv;
+            Salt = salt;
         }
     }
 }

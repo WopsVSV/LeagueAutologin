@@ -84,11 +84,11 @@ namespace LeagueAutologin.Setup
             string accountsAppPath = currentDirectory + "/LeagueAutologin.Accounts.exe";
 
             if (!System.IO.File.Exists(extensionAppPath)) {
-                MessageBox.Show("Could not find LeagueAutologin.Extension.exe inside the application's directory.\nNote: The three LeagueAutologin executables: Extension, Setup, Accounts have to be in the same directory.", "Cannot proceed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Could not find LeagueAutologin.Extension.exe inside the application's directory.\nNote: The three LeagueAutologin executables: Extension, Setup, Accounts and the three images, have to be in the same directory.", "Cannot proceed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (!System.IO.File.Exists(accountsAppPath)) {
-                MessageBox.Show("Could not find LeagueAutologin.Accounts.exe inside the application's directory.\nNote: The three LeagueAutologin executables: Extension, Setup, Accounts have to be in the same directory.", "Cannot proceed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Could not find LeagueAutologin.Accounts.exe inside the application's directory.\nNote: The three LeagueAutologin executables: Extension, Setup, Accounts and the three images, have to be in the same directory.", "Cannot proceed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -110,7 +110,7 @@ namespace LeagueAutologin.Setup
                 IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(shortcutAddress);
                 shortcut.Description = "League of Legends with an Autologin widget.";
                 shortcut.IconLocation = txtLeagueClientLocation.Text + ",0";
-                shortcut.TargetPath = "\"" + extensionAppPath + "\"";
+                shortcut.TargetPath = extensionAppPath;
                 shortcut.WorkingDirectory = Application.StartupPath;
                 shortcut.Save();
             }

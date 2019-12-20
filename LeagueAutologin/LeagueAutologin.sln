@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueAutologin.Extension",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueAutologin.Accounts", "LeagueAutologin.Accounts\LeagueAutologin.Accounts.csproj", "{6F45F73C-4B10-4912-93F5-1AD909BD1E56}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueAutologin.Library", "LeagueAutologin.Library\LeagueAutologin.Library.csproj", "{B212071D-1B1A-4428-B2BB-17F56FD9379B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{6F45F73C-4B10-4912-93F5-1AD909BD1E56}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F45F73C-4B10-4912-93F5-1AD909BD1E56}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F45F73C-4B10-4912-93F5-1AD909BD1E56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B212071D-1B1A-4428-B2BB-17F56FD9379B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B212071D-1B1A-4428-B2BB-17F56FD9379B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B212071D-1B1A-4428-B2BB-17F56FD9379B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B212071D-1B1A-4428-B2BB-17F56FD9379B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

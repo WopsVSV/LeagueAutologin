@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using LeagueAutologin.Library;
+using System;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Linq;
 using System.Net.NetworkInformation;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
@@ -20,9 +17,9 @@ namespace LeagueAutologin.Extension
         private PositionData[] positionData;
 
         // Logos for multiple client sizes
-        Bitmap logoBmp1280 = new Bitmap("logo1280.bmp");
-        Bitmap logoBmp1024 = new Bitmap("logo1024.bmp");
-        Bitmap logoBmp1600 = new Bitmap("logo1600.bmp");
+        private Bitmap logoBmp1280;
+        private Bitmap logoBmp1024;
+        private Bitmap logoBmp1600;
 
         public FrmWidget()
         {
@@ -45,31 +42,55 @@ namespace LeagueAutologin.Extension
                 xml = new XmlConfiguration("accounts.xml");
             }
 
+            // Setup bitmaps
+            try
+            {
+                logoBmp1280 = new Bitmap("logo1280.bmp");
+                logoBmp1024 = new Bitmap("logo1024.bmp");
+                logoBmp1600 = new Bitmap("logo1600.bmp");
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("Error while loading logos. Make sure Extension.exe is in the same folder as the 3 logo images.\n" + ex.Message);
+                Application.Exit();
+                return;
+            }
+
             // Load accounts
             LoadAccounts();
 
             // Load position data
+            // Currently hard-coded positional data for the regular window size (1280x720) and the next 2 available options.
             positionData = new PositionData[3];
             positionData[0] = new PositionData(1280, 720, 67, 284, 67, 348, 188, 495, 66, 56);
             positionData[1] = new PositionData(1024, 576, 53, 225, 53, 278, 150, 397, 53, 45);
             positionData[2] = new PositionData(1600, 900, 84, 355, 84, 435, 233, 621, 82, 70);
 
-            // Focus
+            // Focus on the label to avoid ugly selection
             this.ActiveControl = btnClose;
 
-            // TODO: Start process
+            // Read shortcutInfo and run the LeagueClient executable.
             string shortcutInfoFile = Application.StartupPath + "/shortcutInfo.txt";
             string leagueClientFile = string.Empty;
             try
             {
-                leagueClientFile = System.IO.File.ReadAllText(shortcutInfoFile).Replace("\n", string.Empty).Replace("\r", string.Empty);
+                leagueClientFile = System.IO.File.ReadAllText(shortcutInfoFile)
+                    .Replace("\n", string.Empty).Replace("\r", string.Empty);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("An error occurred while trying to read the shortcutInfo.txt file.\n" + ex.Message);
                 Application.Exit();
             }
-            Process.Start(leagueClientFile);
+
+            try
+            {
+                Process.Start(leagueClientFile);
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("An error occured while trying to launch the LeagueClient executable.\n" + ex.Message);
+            }
 
             // Start looking for process
             tmrCheckProcess.Start();
@@ -86,6 +107,7 @@ namespace LeagueAutologin.Extension
                 tvAccounts.Nodes.Clear();
 
                 // Read accounts
+                xml = new XmlConfiguration("accounts.xml");
                 var accounts = xml.ReadAccounts();
 
                 // Add to tree
@@ -165,27 +187,39 @@ namespace LeagueAutologin.Extension
             tmrRelocateForm.Start();
         }
 
+        bool isStarted = false;
         /// <summary>
-        /// Check processes until RiotClientUx starts.
+        /// Check processes until RiotClientUx starts and the size gets adjusted.
+        /// (Cannot take screenshots of client if current size is 0)
         /// </summary>
         private void tmrCheckProcess_Tick(object sender, EventArgs e)
         {
             var proc = Process.GetProcessesByName("RiotClientUx");
 
-            if (proc.Length > 0)
+            // If it started, that means we are waiting for it to close so we can close our widget as well
+            if(isStarted && proc.Length == 0)
+            {
+                Application.Exit();
+            }
+
+            // If it hasn't started, we are waiting for it to start and set the process
+            if (!isStarted && proc.Length > 0)
             {
                 Rectangle rect = FormHelper.GetWindowRectangle(this, proc[0].MainWindowHandle);
                 if (rect.Width >= 512)
                 {
                     this.proc = proc[0];
+                    isStarted = true;
                     tmrCheckScreen.Start();
-                    tmrCheckProcess.Stop();
                 }
             }
         }
 
         private void tmrRelocateForm_Tick(object sender, EventArgs e) => Relocate();
 
+        /// <summary>
+        /// Makes the widget stick to the League client window.
+        /// </summary>
         private void Relocate()
         {
             Rectangle rect = FormHelper.GetWindowRectangle(this, proc.MainWindowHandle);
@@ -194,9 +228,12 @@ namespace LeagueAutologin.Extension
                 Location = new Point(rect.X - this.Width + 1, rect.Y);
         }
 
-
+        /// <summary>
+        /// Runs the macro for the specific account selected.
+        /// </summary>
         private void tvAccounts_DoubleClick(object sender, EventArgs e)
         {
+            // Avoid possibility of user selecting region node
             if(tvAccounts.SelectedNode.Tag != null)
             {
                 // Window rect
@@ -212,8 +249,10 @@ namespace LeagueAutologin.Extension
                 Account acc = (Account)tvAccounts.SelectedNode.Tag;
                 string cleanPassword = Encoding.UTF8.GetString(AES.Decrypt(acc.Password, acc.Salt, GetPasskey(acc.Username)));
 
+                // Execute macro
                 LoginMacro.ExecuteMacro(posData, rect, acc.Username, cleanPassword);
 
+                // Exit app        
                 Application.Exit();
             }
         }
@@ -238,6 +277,34 @@ namespace LeagueAutologin.Extension
         private byte[] GetPasskey(string username)
         {
             return Encoding.UTF8.GetBytes(GetMacAddress() + username);
+        }
+
+        private void btnAccounts_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var proc = System.Diagnostics.Process.GetProcessesByName("LeagueAutologin.Accounts");
+                if (proc.Length > 0)
+                {
+                    var res = MessageBox.Show("Accounts window is already open. Do you wish to close it and open another one?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (res == DialogResult.Yes)
+                    {
+                        proc[0].Kill();
+                        System.Diagnostics.Process.Start("LeagueAutologin.Accounts.exe");
+                    }
+                }
+                else
+                    System.Diagnostics.Process.Start("LeagueAutologin.Accounts.exe");
+            }
+            catch
+            {
+                MessageBox.Show("Could not load up the accounts program. Make sure LeagueAutologin.Accounts.exe is present in the same folder.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnReload_Click(object sender, EventArgs e)
+        {
+            LoadAccounts();
         }
     }
 }
