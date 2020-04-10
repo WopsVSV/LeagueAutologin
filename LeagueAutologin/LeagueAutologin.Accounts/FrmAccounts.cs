@@ -40,6 +40,11 @@ namespace LeagueAutologin.Accounts
             // Load accounts
             LoadAccounts();
 
+            // Select a default rank & division
+            cbRegion.SelectedIndex = 2;
+            cbRank.SelectedIndex = 0;
+            cbRankDivision.SelectedIndex = 0;
+
             // Avoid ugly selection
             this.ActiveControl = lblUI1;
         }
@@ -49,10 +54,9 @@ namespace LeagueAutologin.Accounts
         /// </summary>
         private void LoadAccounts()
         {
-            try
+           try
             {
-                // Clear tree
-                tvAccounts.Nodes.Clear();
+                accList.Clear();
 
                 // Read accounts
                 var accounts = xml.ReadAccounts();
@@ -60,23 +64,10 @@ namespace LeagueAutologin.Accounts
                 // Add to tree
                 foreach (var acc in accounts)
                 {
-                    // If region doesn't exist, create it
-                    if (tvAccounts.Nodes[acc.Region] == null)
-                    {
-                        tvAccounts.Nodes.Add(acc.Region, acc.Region);
-                    }
-
-                    // Add nickname if available for label
-                    var label = string.IsNullOrEmpty(acc.Nickname) ? acc.Username : acc.Nickname;
-                    TreeNode node = new TreeNode(label)
-                    {
-                        Tag = acc // Crucial tag to hold account information
-                    };
-                    tvAccounts.Nodes[acc.Region].Nodes.Add(node);
+                    accList.Add(new AccListItem(acc));                
                 }
 
-                tvAccounts.ExpandAll();
-
+                accList.Refresh();
             }
             catch (Exception ex)
             {
@@ -98,6 +89,16 @@ namespace LeagueAutologin.Accounts
             if (string.IsNullOrEmpty(txtPassword.Text)) { MessageBox.Show("Password field cannot be empty."); return; }
             if (string.IsNullOrEmpty(cbRegion.SelectedItem.ToString())) { MessageBox.Show("Region field cannot be empty."); return; }
 
+            // Create rank text
+            string rank = cbRank.GetItemText(cbRank.SelectedItem);
+            string division = cbRankDivision.GetItemText(cbRankDivision.SelectedItem);
+
+            string accountRank;
+            if (rank == "Unranked" || rank == "Master" || rank == "Grandmaster" || rank == "Challenger")
+                accountRank = rank;
+            else
+                accountRank = rank + " " + division;
+
             // Create encrypted password
             try
             {
@@ -114,7 +115,8 @@ namespace LeagueAutologin.Accounts
                     encryptedPassword, 
                     salt,
                     txtNickname.Text, 
-                    cbRegion.SelectedItem.ToString());
+                    cbRegion.SelectedItem.ToString(),
+                    accountRank);
 
                 // Add account to the XML document and save
                 xml.AddAccount(acc);
@@ -132,38 +134,16 @@ namespace LeagueAutologin.Accounts
             
             // Refresh tree view
             LoadAccounts();
-
-            // Display green text (success)
-            var tmr = new Timer() { Interval = 650 };
-            tmr.Tick += (o, ev) =>
-            {
-                btnAddAccount.ForeColor = Color.Black;
-                tmr.Stop();
-            };
-            btnAddAccount.ForeColor = Color.Green;
-            tmr.Start();
+            
         }
 
-        /// <summary>
-        /// Gets the computer's MAC address.
-        /// </summary>
-        private string GetMacAddress()
-        {
-           var macAddr =
-           (
-               from nic in NetworkInterface.GetAllNetworkInterfaces()
-               where nic.OperationalStatus == OperationalStatus.Up
-               select nic.GetPhysicalAddress().ToString()
-           ).FirstOrDefault();
-           return macAddr;
-        }
 
         /// <summary>
         /// Generates a passkey based on the mac address and username
         /// </summary>
         private byte[] GetPasskey(string username)
         {
-            return Encoding.UTF8.GetBytes(GetMacAddress() + username);
+            return Encoding.UTF8.GetBytes(Environment.UserName + username);
         }
 
         /// <summary>
@@ -171,25 +151,39 @@ namespace LeagueAutologin.Accounts
         /// </summary>
         private void removeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(tvAccounts.SelectedNode != null)
-            {
-                if (tvAccounts.SelectedNode.Nodes.Count == 0)
-                {
-                    xml.RemoveAccount((Account)tvAccounts.SelectedNode.Tag);
-                    xml.Save();
-                    LoadAccounts();
-                }
+            if (accList.LastHoveredItem() != null) {
+                xml.RemoveAccount(accList.LastHoveredItem().Account);
+                xml.Save();
+
+                LoadAccounts();
             }
         }
 
-        /// <summary>
-        /// Used to avoid right click bug.
-        /// </summary>
-        private void tvAccounts_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        private void cmsTreeView_Opening(object sender, CancelEventArgs e)
         {
-            if (e.Button == MouseButtons.Right)
+
+        }
+
+        private void changeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (accList.LastHoveredItem() != null)
             {
-                tvAccounts.SelectedNode = e.Node;
+                RankSelectionForm rankDialog = new RankSelectionForm();
+
+                // Show testDialog as a modal dialog and determine if DialogResult = OK.
+                if (rankDialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    xml.ChangeAccount(accList.LastHoveredItem().Account, rankDialog.fullRank.Text);
+                    xml.Save();
+                    LoadAccounts();
+                    
+                }
+                else
+                {
+                    MessageBox.Show("Rank selection cancelled");
+                }
+                rankDialog.Dispose();
+
             }
         }
     }

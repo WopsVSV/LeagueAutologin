@@ -43,16 +43,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccList.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="AccListItem.cs" />
     <Compile Include="FrmAccounts.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FrmAccounts.Designer.cs">
       <DependentUpon>FrmAccounts.cs</DependentUpon>
     </Compile>
+    <Compile Include="LeagueRank.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RankSelectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RankSelectionForm.Designer.cs">
+      <DependentUpon>RankSelectionForm.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="FrmAccounts.resx">
       <DependentUpon>FrmAccounts.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -62,7 +74,11 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="RankSelectionForm.resx">
+      <DependentUpon>RankSelectionForm.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -78,6 +94,36 @@
       <Project>{b212071d-1b1a-4428-b2bb-17f56fd9379b}</Project>
       <Name>LeagueAutologin.Library</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Emblem_Bronze.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Emblem_Challenger.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Emblem_Diamond.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Emblem_Gold.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Emblem_Grandmaster.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Emblem_Iron.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Emblem_Master.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Emblem_Platinum.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Emblem_Silver.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Emblem_Unranked.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

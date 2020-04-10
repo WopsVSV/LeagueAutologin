@@ -52,6 +52,7 @@ namespace LeagueAutologin.Library
             element.Add(new XElement("salt", Convert.ToBase64String(account.Salt)));
             element.Add(new XElement("nickname", account.Nickname));
             element.Add(new XElement("region", account.Region));
+            element.Add(new XElement("rank", account.Rank));
 
             document.Root.Add(element);
         }
@@ -78,6 +79,25 @@ namespace LeagueAutologin.Library
             return true;
         }
 
+        public void ChangeAccount(Account account, string rank)
+        {
+            try
+            {
+                foreach (var elem in document.Root.Elements())
+                {
+                    if (elem.Element("username") == null || elem.Element("region") == null) continue;
+
+                    if (account.Username == elem.Element("username").Value &&
+                        account.Region == elem.Element("region").Value)
+                    {
+                        elem.Element("rank").Value = rank;
+                      
+                    }
+                }
+            }
+            catch { }
+        }
+
         /// <summary>
         /// Reads and returns a list of all accounts included in the XML.
         /// </summary>
@@ -98,7 +118,8 @@ namespace LeagueAutologin.Library
                         Convert.FromBase64String(elem.Element("password").Value),
                         Convert.FromBase64String(elem.Element("salt").Value),
                         elem.Element("nickname").Value,
-                        elem.Element("region").Value);
+                        elem.Element("region").Value,
+                        elem.Element("rank").Value);
                     accounts.Add(acc);
                 }
             }

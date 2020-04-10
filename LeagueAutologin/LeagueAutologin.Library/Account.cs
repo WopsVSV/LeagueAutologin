@@ -11,15 +11,17 @@ namespace LeagueAutologin.Library
         public byte[] Password { get; private set; }
         public byte[] Salt { get; private set; }
         public string Nickname { get; private set; }
+        public string Rank { get; private set; }
         public string Region { get; private set; }
 
-        public Account(string username, byte[] password, byte[] salt, string nickname, string region)
+        public Account(string username, byte[] password, byte[] salt, string nickname, string region, string rank)
         {
             Username = username;
             Password = password;
             Nickname = nickname;
             Region = region;
             Salt = salt;
+            Rank = rank;
         }
     }
 }

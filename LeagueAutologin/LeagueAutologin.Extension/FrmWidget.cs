@@ -1,8 +1,10 @@
-﻿using LeagueAutologin.Library;
+﻿using AForge.Imaging;
+using LeagueAutologin.Library;
 using System;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
@@ -86,7 +88,7 @@ namespace LeagueAutologin.Extension
             try
             {
                 // Clear tree
-                tvAccounts.Nodes.Clear();
+                accList.Clear();
 
                 // Read accounts
                 xml = new XmlConfiguration("accounts.xml");
@@ -95,22 +97,10 @@ namespace LeagueAutologin.Extension
                 // Add to tree
                 foreach (var acc in accounts)
                 {
-                    // If region doesn't exist, create it
-                    if (tvAccounts.Nodes[acc.Region] == null)
-                    {
-                        tvAccounts.Nodes.Add(acc.Region, acc.Region);
-                    }
-
-                    // Add nickname if available for label
-                    var label = string.IsNullOrEmpty(acc.Nickname) ? acc.Username : acc.Nickname;
-                    TreeNode node = new TreeNode(label)
-                    {
-                        Tag = acc // Crucial tag to hold account information
-                    };
-                    tvAccounts.Nodes[acc.Region].Nodes.Add(node);
+                    accList.Add(new AccListItem(acc));
                 }
 
-                tvAccounts.ExpandAll();
+                accList.Refresh();
 
             }
             catch (Exception ex)
@@ -125,7 +115,8 @@ namespace LeagueAutologin.Extension
             Application.Exit();
         }
 
-       
+        PositionData posData;
+
         /// <summary>
         /// Checks the screen for the League logo (checks if client is visible)
         /// </summary>
@@ -133,16 +124,39 @@ namespace LeagueAutologin.Extension
         {
             Rectangle rect = FormHelper.GetWindowRectangle(this, proc.MainWindowHandle);
 
-            if(rect.Width == 1280 || rect.Width == 1024 || rect.Width == 1600)
-            {
-                System.Threading.Thread.Sleep(800);
+             if(rect.Width == 1280 || rect.Width == 1024 || rect.Width == 1600)
+             {
+                PositionData posData = positionData[0];
+                if (rect.Width == 1280) posData = positionData[0];
+                if (rect.Width == 1024) posData = positionData[1];
+                if (rect.Width == 1600) posData = positionData[2];
+
+                this.Size = new Size(254, posData.Height);
+                this.accList.Size = new Size(240, this.Size.Height - 42 - 1);
+                
+                 
                 Relocate();
+
+                SetForegroundWindow(proc.MainWindowHandle);
+                
+                System.Threading.Thread.Sleep(200);
+
                 this.Opacity = 1.0;
                 this.Enabled = true;
+
+                this.WindowState = FormWindowState.Minimized;
+                this.Show();
+                this.WindowState = FormWindowState.Normal;
+
                 tmrRelocateForm.Start();
                 tmrCheckScreen.Stop();
-            }      
+             }
+             
         }
+
+        [DllImport("USER32.DLL")]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+
 
         bool isStarted = false;
         /// <summary>
@@ -181,8 +195,14 @@ namespace LeagueAutologin.Extension
         {
             Rectangle rect = FormHelper.GetWindowRectangle(this, proc.MainWindowHandle);
 
+            int offset = 0;
+            if (rect.Width == 1280) offset = 376;
+            if (rect.Width == 1024) offset = 296;
+            if (rect.Width == 1600) offset = 475;
+
             if (Location.X != rect.X || Location.Y != rect.Y)
-                Location = new Point(rect.X - this.Width + 1, rect.Y);
+                Location = new Point(rect.X + offset, rect.Y);
+            
         }
 
         /// <summary>
@@ -191,7 +211,8 @@ namespace LeagueAutologin.Extension
         private void tvAccounts_DoubleClick(object sender, EventArgs e)
         {
             // Avoid possibility of user selecting region node
-            if(tvAccounts.SelectedNode.Tag != null)
+            /*
+            if (tvAccounts.SelectedNode.Tag != null)
             {
                 // Window rect
                 Rectangle rect = FormHelper.GetWindowRectangle(this, proc.MainWindowHandle); 
@@ -211,29 +232,16 @@ namespace LeagueAutologin.Extension
 
                 // Exit app        
                 Application.Exit();
-            }
+            }*/
         }
 
-        /// <summary>
-        /// Gets the computer's MAC address.
-        /// </summary>
-        private string GetMacAddress()
-        {
-            var macAddr =
-            (
-                from nic in NetworkInterface.GetAllNetworkInterfaces()
-                where nic.OperationalStatus == OperationalStatus.Up
-                select nic.GetPhysicalAddress().ToString()
-            ).FirstOrDefault();
-            return macAddr;
-        }
-
+       
         /// <summary>
         /// Generates a passkey based on the mac address and username
         /// </summary>
         private byte[] GetPasskey(string username)
         {
-            return Encoding.UTF8.GetBytes(GetMacAddress() + username);
+            return Encoding.UTF8.GetBytes(Environment.UserName + username);
         }
 
         private void btnAccounts_Click(object sender, EventArgs e)
@@ -263,10 +271,35 @@ namespace LeagueAutologin.Extension
         {
             LoadAccounts();
         }
+
         [DllImport("User32.dll")]
         public static extern IntPtr GetDC(IntPtr hwnd);
         [DllImport("User32.dll")]
         public static extern void ReleaseDC(IntPtr hwnd, IntPtr dc);
-   
+
+        private void accList_DoubleClick(object sender, EventArgs e)
+        {
+            // Window rect
+            Rectangle rect = FormHelper.GetWindowRectangle(this, proc.MainWindowHandle);
+
+            // Positional data
+            PositionData posData = positionData[0];
+            if (rect.Width == 1280) posData = positionData[0];
+            if (rect.Width == 1024) posData = positionData[1];
+            if (rect.Width == 1600) posData = positionData[2];
+
+            // Account
+            if (accList.LastHoveredItem != null) {
+
+                Account acc = accList.LastHoveredItem.Account;
+                string cleanPassword = Encoding.UTF8.GetString(AES.Decrypt(acc.Password, acc.Salt, GetPasskey(acc.Username)));
+
+                // Execute macro
+                LoginMacro.ExecuteMacro(posData, rect, acc.Username, cleanPassword);
+
+                // Exit app        
+                Application.Exit();
+            }
+        }
     }
 }
